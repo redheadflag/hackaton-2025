@@ -1,0 +1,57 @@
+services:
+  
+  backend:
+    build:
+      context: .
+    image: hackaton-backend:latest
+    container_name: hackaton_backend
+
+    command: ["fastapi", "run", "src/main.py", "--port", "8000"]
+
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      prestart:
+        condition: service_completed_successfully
+    
+    environment:
+      - PYTHONPATH=/app/src
+    
+    ports:
+      - "${BACKEND_PORT}:8000"
+    
+  prestart:
+    image: hackaton-backend:latest
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    command: sh ./prestart.sh
+    environment:
+      - PYTHONPATH=/app/src
+    env_file:
+      - .env
+
+  db:
+    image: postgres:17-bookworm
+    container_name: hackaton_db
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data/pgdata
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -p ${POSTGRES_PORT}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: -p ${POSTGRES_PORT}
+
+volumes:
+  pg_data:
