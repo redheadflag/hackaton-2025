@@ -10,6 +10,7 @@ from shapely import wkt
 from db.models import Message
 from schemas import MessageCreate, MessageRead
 from db.repositories.messages import message_repository
+from utils.message_validation import validate_message
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ async def create_message(
     # Ensure the message is for the correct channel
     if message.channel_id != channel_id:
         raise HTTPException(status_code=400, detail="channel_id mismatch")
+
+    is_valid = await validate_message(session, message.sender_id)
+    if not is_valid:
+        raise HTTPException(status_code=403, detail="Message not validated by oracles")
+
     message_db = await message_repository.create(session, message)
     
     # Convert point back to tuple for response

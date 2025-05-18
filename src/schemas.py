@@ -2,15 +2,18 @@ from pydantic import BaseModel, UUID4
 from typing import Optional, Tuple
 # from uuid import UUID
 
-from db.enums import ChannelType
+from db.enums import ChannelType, UserType
 
 # User Schemas
 class UserBase(BaseModel):
     login: str
+    is_oracle: bool = False
+    user_type: UserType = UserType.HUMAN
 
 
 class UserCreate(UserBase):
     password: str
+
 
 class UserUpdate(UserCreate):
     pass
@@ -53,7 +56,7 @@ class UserChannelCreate(UserChannelBase):
 
 class UserChannelRead(UserChannelBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Message Schemas

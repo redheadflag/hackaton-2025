@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
 from db.base import Base
-from db.enums import ChannelType
+from db.enums import ChannelType, UserType
 from db.mixins import DeletableMixin, TimeStampedMixin
 
 
@@ -17,6 +17,9 @@ class User(TimeStampedMixin, Base):
     login: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(String(60), nullable=False)
 
+    is_oracle: Mapped[bool] = mapped_column(default=False)
+    user_type: Mapped[str] = mapped_column(Enum(UserType), nullable=False, default=UserType.HUMAN)
+    
     channels: Mapped[list["Channel"]] = relationship(back_populates="creator", secondary="user_channels")
 
 
