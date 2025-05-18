@@ -1,4 +1,4 @@
-import { API_BASE, CHANNEL_ID, USER_ID, USER_NAME } from "@/services/constants";
+import { API_BASE, CHANNEL_ID, USER_ID } from "@/services/constants";
 import { getCurrentLocation } from "@/services/LocationService";
 import React, { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -31,7 +31,7 @@ export default function HomeScreen() {
   };
 
   // Handle form submit
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
   if (!species.trim() || !description.trim()) {
     setSubmitMsg("Please fill in all fields.");
     return;
@@ -40,36 +40,30 @@ export default function HomeScreen() {
     setSubmitMsg("Could not get current location.");
     return;
   }
-  setSubmitting(true);
-  setSubmitMsg('');
   try {
     const payload = {
-      userId: USER_ID,
-      // userName: USER_NAME,
-      title: species.trim(),
-      content: {message: description.trim()},
-      location: location,
-      // createdAt: new Date().toISOString(),
+      channel_id: CHANNEL_ID,
+      sender_id: USER_ID,
+      content: {
+        species: species.trim(),
+        description: description.trim(),
+      },
+      point: [location.latitude, location.longitude],
+      title: "Observation"
     };
-    // Compose the full URL
-    const url = `${API_BASE}/channels/${CHANNEL_ID}/messages`;
-    const response = await fetch(url, {
+    const response = await fetch(`${API_BASE}/channels/${CHANNEL_ID}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     if (!response.ok) throw new Error("Failed to submit observation");
     setSubmitMsg("Observation submitted!");
-    setSpecies('');
-    setDescription('');
-    setShowForm(false);
-    setLocation(null);
+    // Clear form, etc.
   } catch (error: any) {
     setSubmitMsg("Error: " + error.message);
-  } finally {
-    setSubmitting(false);
   }
 };
+
 
   return (
     <KeyboardAvoidingView

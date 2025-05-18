@@ -1,7 +1,7 @@
+import { API_BASE, CHANNEL_ID } from "@/services/constants";
 import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { StyleSheet, View, Dimensions, Text, ActivityIndicator } from "react-native";
-import { CHANNEL_ID, API_BASE } from "@/services/constants";
 
 type Observation = {
   userId: string;
@@ -14,25 +14,41 @@ type Observation = {
 
 export default function MapScreen() {
   const [observations, setObservations] = useState<Observation[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    // Could also use useFocusEffect from @react-navigation/native if you want to refresh every time user opens the map
     const fetchObservations = async () => {
       setLoading(true);
       setErr(null);
       try {
-        const resp = await fetch(`${API_BASE}/channels/${CHANNEL_ID}/messages`);
-        if (!resp.ok) throw new Error("Failed to load observations");
-        const data = await resp.json();
-        setObservations(data); // expects array
+        const url = `${API_BASE}/channels/${CHANNEL_ID}/messages`;
+        const response = await fetch(url);
+
+        const text = await response.text();
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${text}`);
+        const data = JSON.parse(text);
+
+        const mapped: Observation[] = data.map((obs: any) => ({
+          userId: obs.sender_id || obs.userId || "",
+          userName: obs.content?.userName || obs.userName || "",
+          species: obs.content?.species || "",
+          description: obs.content?.description || "",
+          location: obs.point
+            ? { latitude: obs.point[0], longitude: obs.point[1] }
+            : { latitude: 0, longitude: 0 },
+        }));
+
+        setObservations(mapped);
       } catch (e: any) {
         setErr(e.message);
+        setObservations([]);
       } finally {
         setLoading(false);
       }
     };
+
     fetchObservations();
   }, []);
 
@@ -59,8 +75,11 @@ export default function MapScreen() {
         <MapView style={styles.map} initialRegion={initialRegion}>
           {observations.map((obs, idx) => (
             <Marker
-              key={obs.createdAt + idx}
-              coordinate={obs.location}
+              key={`${obs.userId}-${idx}`}
+              coordinate={{
+                latitude: obs.location.latitude,
+                longitude: obs.location.longitude,
+              }}
               title={obs.species}
               description={obs.description}
               pinColor="red"
@@ -73,7 +92,7 @@ export default function MapScreen() {
           <Text style={styles.error}>{err}</Text>
         </View>
       )}
-      {!loading && observations.length === 0 && (
+      {!loading && observations.length === 0 && !err && (
         <View style={styles.overlay}>
           <Text style={styles.emptyText}>No observations yet!</Text>
         </View>
@@ -101,6 +120,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     fontWeight: "bold",
+    marginTop: 50,
   },
   emptyText: {
     backgroundColor: "rgba(255,255,255,0.85)",
@@ -109,6 +129,5 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     fontWeight: "bold",
     fontSize: 16,
-    marginTop: 40,
   },
 });
