@@ -6,7 +6,7 @@ services:
     image: hackaton-backend:latest
     container_name: hackaton_backend
 
-    command: ["fastapi", "run", "src/main.py", "--port", "8000"]
+    command: ["fastapi", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8000"]
 
     depends_on:
       db:
@@ -17,6 +17,16 @@ services:
     
     environment:
       - PYTHONPATH=/app/src
+    
+    develop:
+      watch:
+        - path: ./
+          action: sync+restart
+          target: /app
+          ignore:
+            - ./venv
+        - path: ./pyproject.toml
+          action: rebuild
     
     ports:
       - "${BACKEND_PORT}:8000"
@@ -34,7 +44,8 @@ services:
       - .env
 
   db:
-    image: postgres:17-bookworm
+    platform: linux/x86_64
+    image: postgis/postgis:17-3.5-alpine
     container_name: hackaton_db
     restart: unless-stopped
     ports:

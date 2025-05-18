@@ -1,0 +1,81 @@
+from pydantic import BaseModel, UUID4
+from typing import Optional, Tuple
+# from uuid import UUID
+
+from core.security import hash_password
+from db.enums import ChannelType
+
+# User Schemas
+class UserBase(BaseModel):
+    login: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+    @property
+    def password_hash(self) -> str:
+        return hash_password(self.password)
+
+class UserUpdate(UserCreate):
+    pass
+
+class UserRead(UserBase):
+    id: UUID4
+
+    class Config:
+        from_attributes = True
+
+
+# Channel Schemas
+class ChannelBase(BaseModel):
+    name: str
+    slug: str
+    type: ChannelType
+
+
+class ChannelCreate(ChannelBase):
+    creator_id: UUID4
+
+
+class ChannelRead(ChannelBase):
+    id: UUID4
+    creator_id: UUID4
+
+    class Config:
+        from_attributes = True
+
+
+# UserChannel Schemas
+class UserChannelBase(BaseModel):
+    user_id: UUID4
+    channel_id: UUID4
+
+
+class UserChannelCreate(UserChannelBase):
+    pass
+
+
+class UserChannelRead(UserChannelBase):
+    class Config:
+        orm_mode = True
+
+
+# Message Schemas
+class MessageBase(BaseModel):
+    channel_id: UUID4
+    sender_id: UUID4
+    content: dict
+    point: Tuple[float, float]
+    title: Optional[str] = None
+
+
+class MessageCreate(MessageBase):
+    pass
+
+
+class MessageRead(MessageBase):
+    id: UUID4
+
+    class Config:
+        from_attributes = True
