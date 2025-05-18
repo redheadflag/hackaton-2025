@@ -2,7 +2,6 @@ from pydantic import BaseModel, UUID4
 from typing import Optional, Tuple
 # from uuid import UUID
 
-from core.security import hash_password
 from db.enums import ChannelType
 
 # User Schemas
@@ -12,10 +11,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-
-    @property
-    def password_hash(self) -> str:
-        return hash_password(self.password)
 
 class UserUpdate(UserCreate):
     pass
@@ -30,7 +25,6 @@ class UserRead(UserBase):
 # Channel Schemas
 class ChannelBase(BaseModel):
     name: str
-    slug: str
     type: ChannelType
 
 
@@ -40,6 +34,7 @@ class ChannelCreate(ChannelBase):
 
 class ChannelRead(ChannelBase):
     id: UUID4
+    slug: str
     creator_id: UUID4
 
     class Config:
@@ -66,7 +61,7 @@ class MessageBase(BaseModel):
     channel_id: UUID4
     sender_id: UUID4
     content: dict
-    point: Tuple[float, float]
+    point: Tuple[float, float] | str
     title: Optional[str] = None
 
 

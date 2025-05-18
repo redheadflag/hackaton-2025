@@ -13,7 +13,7 @@ router = APIRouter(prefix="/users")
 
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def create_user_handler(user: UserCreate, session: AsyncSession = Depends(get_session)):
-    return await user_repository.create(session, user_schema=user)
+    return await user_repository.create(session, user)
 
 
 @router.put("/{user_id}", response_model=UserRead)

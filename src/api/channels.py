@@ -1,8 +1,10 @@
+from slugify import slugify
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.deps import get_session
+
 from schemas import ChannelCreate, ChannelRead, ChannelBase
 from db.repositories.channels import channel_repository
 
@@ -11,7 +13,8 @@ router = APIRouter(prefix="/channels")
 
 @router.post("", response_model=ChannelRead, status_code=status.HTTP_201_CREATED)
 async def create_channel(channel: ChannelCreate, session: AsyncSession = Depends(get_session)):
-    return await channel_repository.create(session, channel)
+    slug = slugify(channel.name)
+    return await channel_repository.create(session, channel, slug)
 
 
 @router.get("", response_model=list[ChannelRead])

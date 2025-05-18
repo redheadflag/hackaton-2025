@@ -51,7 +51,7 @@ class CRUDRepository(Generic[ORMModel]):
         return list(await session.scalars(stmt))
 
     async def delete(self, session: AsyncSession, obj_id: int | str | UUID4) -> None:
-        obj = self.get(session, obj_id)
+        obj = await self.get(session, obj_id)
         if not obj:
             raise NotFoundError("Incorrect id provided")
         await session.delete(obj)

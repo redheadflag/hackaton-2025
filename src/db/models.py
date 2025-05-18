@@ -14,7 +14,7 @@ class User(TimeStampedMixin, Base):
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    login: Mapped[str] = mapped_column(String(50), nullable=False)
+    login: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(String(60), nullable=False)
 
     channels: Mapped[list["Channel"]] = relationship(back_populates="creator", secondary="user_channels")
@@ -27,7 +27,7 @@ class Channel(TimeStampedMixin, DeletableMixin, Base):
 
     creator_id: Mapped[str] = mapped_column(ForeignKey('users.id'), nullable=False)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
-    slug: Mapped[str] = mapped_column(String(50), nullable=False)
+    slug: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
 
     type: Mapped[str] = mapped_column(Enum(ChannelType), nullable=False)
 
@@ -50,6 +50,6 @@ class Message(TimeStampedMixin, DeletableMixin, Base):
 
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
-    point: Mapped[tuple[float, float]] = mapped_column(Geometry(geometry_type="POINT", srid=4326), nullable=False)
+    point = mapped_column(Geometry(geometry_type="POINT", srid=4326), nullable=False)
     
     title: Mapped[str] = mapped_column(String(50), nullable=True)
